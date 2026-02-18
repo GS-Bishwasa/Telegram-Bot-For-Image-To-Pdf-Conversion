@@ -4,6 +4,16 @@ import fs from "fs";
 import axios from "axios";
 import dotenv from "dotenv";
 
+const port =  3000 
+
+app.get('/', (req, res) => {
+  res.send('Hello World!')
+})
+
+app.listen(port, () => {
+  console.log(`Example app listening on port ${port}`)
+})
+
 dotenv.config();
 
 const token = process.env.TOKEN;
@@ -44,7 +54,7 @@ bot.on("photo", async (msg) => {
 });
 
 // /pdf command
-bot.onText(/\/pdf/, async (msg) => {
+bot.onText(/\/A4pdf/, async (msg) => {
   const chatId = msg.chat.id;
 
   if (!userPhotos[chatId] || userPhotos[chatId].length === 0) {
@@ -88,6 +98,48 @@ bot.onText(/\/pdf/, async (msg) => {
   });
 });
 
+bot.onText(/\/pdf/, async (msg) => {
+  const chatId = msg.chat.id;
+
+  if (!userPhotos[chatId] || userPhotos[chatId].length === 0) {
+    bot.sendMessage(chatId, "No photos added.");
+    return;
+  }
+
+  bot.sendMessage(chatId, "Creating PDF...");
+
+  const pdfName = `output_${chatId}.pdf`;
+  const doc = new PDFDocument({ autoFirstPage: false });
+  const stream = fs.createWriteStream(pdfName);
+
+  doc.pipe(stream);
+
+  for (const img of userPhotos[chatId]) {
+    // get image size
+    const image = doc.openImage(img);
+
+    // create page same size as image
+    doc.addPage({
+      size: [image.width, image.height],
+      margin: 0,
+    });
+
+    doc.image(img, 0, 0);
+  }
+
+  doc.end();
+
+  stream.on("finish", async () => {
+    await bot.sendDocument(chatId, pdfName);
+
+    // cleanup
+    userPhotos[chatId].forEach((file) => fs.unlinkSync(file));
+    fs.unlinkSync(pdfName);
+    userPhotos[chatId] = [];
+  });
+});
+
+
 // /start command
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
@@ -109,7 +161,8 @@ Convert multiple photos into a single PDF in seconds.
 3. Receive your PDF instantly
 
 🧾 Commands:
-• /pdf → Create PDF from added photos
+• /A4pdf → Create A4 Size PDF from added photos
+• /pdf → Create Normal PDF from added photos
 • /reset → Clear added photos (optional)
 • /info → About this bot
 • /help → Show usage instructions
@@ -151,6 +204,7 @@ bot.onText(/\/info/, (msg) => {
     `📄 Photo-to-PDF Bot
 
 • Send photos to add them to your PDF
+• /A4pdf → Generate A4 Size PDF from added photos
 • /pdf → Generate PDF from added photos
 • /reset → Clear all added photos
 • /help → Show usage instructions
@@ -176,10 +230,11 @@ bot.onText(/\/help/, (msg) => {
     chatId,
     `📖 Bot Commands
 
-/pdf   — Create a PDF from all added photos
-/reset — Remove all added photos and start fresh
-/info  — About this bot
-/help  — Show this help message
+/A4pdf → Create a A4 Size PDF from all added photos
+/pdf → Create a PDF from all added photos
+/reset → Remove all added photos and start fresh
+/info → About this bot
+/help → Show this help message
 
 🖼️ Send photos anytime to add them to your PDF collection.
 When you're done, simply type /pdf to generate your file.
