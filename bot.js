@@ -268,7 +268,7 @@ bot.on("message", (msg) => {
     if (msg.text.startsWith("/")) {
       const command = msg.text.split(" ")[0].substring(1);
 
-      if (command !== "help" && command !== "info" && command !== "pdf" && command !== "reset" && command !== "start") {
+      if (command !== "help" && command !== "info" && command !== "pdf" && command !== "reset" && command !== "start" && command !== "A4pdf") {
         bot.sendMessage(
           chatId,
           `❌ Unknown command: /${command}\nType /help to see available commands.`
