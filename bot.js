@@ -49,7 +49,13 @@ bot.on("photo", async (msg) => {
 
     bot.sendMessage(
   chatId,
-  `📄 Photo added to PDF queue\nPhotos added: ${userPhotos[chatId].length}\n\nSend more photos or type /pdf to generate your PDF.`
+ `✅ Photo added successfully!
+
+🖼 Photos in queue: ${userPhotos[chatId].length}
+
+When ready, choose:
+📄 /pdf – Original size PDF
+📑 /a4pdf – A4-size PDF`
 );
 
   });
