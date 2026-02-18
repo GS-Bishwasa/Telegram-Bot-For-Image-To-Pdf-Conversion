@@ -56,7 +56,7 @@ bot.on("photo", async (msg) => {
 });
 
 // /pdf command
-bot.onText(/\/A4pdf/, async (msg) => {
+bot.onText(/\/a4pdf/, async (msg) => {
   const chatId = msg.chat.id;
 
   if (!userPhotos[chatId] || userPhotos[chatId].length === 0) {
@@ -268,7 +268,7 @@ bot.on("message", (msg) => {
     if (msg.text.startsWith("/")) {
       const command = msg.text.split(" ")[0].substring(1);
 
-      if (command !== "help" && command !== "info" && command !== "pdf" && command !== "reset" && command !== "start" && command !== "A4pdf") {
+      if (command !== "help" && command !== "info" && command !== "pdf" && command !== "reset" && command !== "start" && command !== "a4pdf") {
         bot.sendMessage(
           chatId,
           `❌ Unknown command: /${command}\nType /help to see available commands.`
