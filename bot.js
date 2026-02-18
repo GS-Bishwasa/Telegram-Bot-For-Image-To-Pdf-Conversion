@@ -63,7 +63,7 @@ bot.onText(/\/A4pdf/, async (msg) => {
     bot.sendMessage(chatId, "No photos added.");
     return;
   }
-  bot.sendMessage(chatId, "Creating PDF...");
+  bot.sendMessage(chatId, "Creating A4 Size PDF...");
   const pdfName = `output_${chatId}.pdf`;
   const doc = new PDFDocument({ size: "A4", margin: 0 });
   const stream = fs.createWriteStream(pdfName);
@@ -108,7 +108,7 @@ bot.onText(/\/pdf/, async (msg) => {
     return;
   }
 
-  bot.sendMessage(chatId, "Creating PDF...");
+  bot.sendMessage(chatId, "Creating Normal PDF...");
 
   const pdfName = `output_${chatId}.pdf`;
   const doc = new PDFDocument({ autoFirstPage: false });
