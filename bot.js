@@ -163,7 +163,7 @@ Convert multiple photos into a single PDF in seconds.
 3. Receive your PDF instantly
 
 🧾 Commands:
-• /A4pdf → Create A4 Size PDF from added photos
+• /a4pdf → Create A4 Size PDF from added photos
 • /pdf → Create Normal PDF from added photos
 • /reset → Clear added photos (optional)
 • /info → About this bot
@@ -206,7 +206,7 @@ bot.onText(/\/info/, (msg) => {
     `📄 Photo-to-PDF Bot
 
 • Send photos to add them to your PDF
-• /A4pdf → Generate A4 Size PDF from added photos
+• /a4pdf → Generate A4 Size PDF from added photos
 • /pdf → Generate PDF from added photos
 • /reset → Clear all added photos
 • /help → Show usage instructions
@@ -232,7 +232,7 @@ bot.onText(/\/help/, (msg) => {
     chatId,
     `📖 Bot Commands
 
-/A4pdf → Create a A4 Size PDF from all added photos
+/a4pdf → Create a A4 Size PDF from all added photos
 /pdf → Create a PDF from all added photos
 /reset → Remove all added photos and start fresh
 /info → About this bot
