@@ -4,29 +4,48 @@ import fs from "fs";
 import axios from "axios";
 import dotenv from "dotenv";
 import express from "express";
-const app = express()
-
-const port =  3000 
-
-app.get('/', (req, res) => {
-  res.send('Hello World!')
-})
-
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`)
-})
 
 dotenv.config();
 
 const token = process.env.TOKEN;
-const bot = new TelegramBot(token, { polling: true });
+const app = express();
+
+app.use(express.json());
+
+// IMPORTANT: Use process.env.PORT for Render/Railway
+const PORT = process.env.PORT || 3000;
+
+// Create bot WITHOUT polling
+const bot = new TelegramBot(token);
+
+// Your deployed app URL (VERY IMPORTANT)
+// Example: https://your-app-name.onrender.com
+const WEBHOOK_URL = process.env.APP_URL;
+
+// Set webhook
+bot.setWebHook(`${WEBHOOK_URL}/bot${token}`);
+
+// Telegram will send updates here
+app.post(`/bot${token}`, (req, res) => {
+  bot.processUpdate(req.body);
+  res.sendStatus(200);
+});
+
+app.get("/", (req, res) => {
+  res.send("Bot is running...");
+});
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
 
 // store user images
 const userPhotos = {};
 
+// ================= PHOTO HANDLER =================
 bot.on("photo", async (msg) => {
   const chatId = msg.chat.id;
-  console.log(msg);
+
   if (!userPhotos[chatId]) userPhotos[chatId] = [];
 
   const photo = msg.photo[msg.photo.length - 1];
@@ -48,28 +67,28 @@ bot.on("photo", async (msg) => {
     userPhotos[chatId].push(filename);
 
     bot.sendMessage(
-  chatId,
- `✅ Photo added successfully!
+      chatId,
+      `✅ Photo added successfully!
 
 🖼 Photos in queue: ${userPhotos[chatId].length}
 
 When ready, choose:
 📄 /pdf – Original size PDF
 📑 /a4pdf – A4-size PDF`
-);
-
+    );
   });
 });
 
-// /pdf command
+// ================= A4 PDF =================
 bot.onText(/\/a4pdf/, async (msg) => {
   const chatId = msg.chat.id;
 
   if (!userPhotos[chatId] || userPhotos[chatId].length === 0) {
-    bot.sendMessage(chatId, "No photos added.");
-    return;
+    return bot.sendMessage(chatId, "No photos added.");
   }
+
   bot.sendMessage(chatId, "Creating A4 Size PDF...");
+
   const pdfName = `output_${chatId}.pdf`;
   const doc = new PDFDocument({ size: "A4", margin: 0 });
   const stream = fs.createWriteStream(pdfName);
@@ -82,11 +101,8 @@ bot.onText(/\/a4pdf/, async (msg) => {
     if (!first) doc.addPage({ size: "A4", margin: 0 });
     first = false;
 
-    const pageWidth = doc.page.width;
-    const pageHeight = doc.page.height;
-
     doc.image(img, 0, 0, {
-      fit: [pageWidth, pageHeight],
+      fit: [doc.page.width, doc.page.height],
       align: "center",
       valign: "center",
     });
@@ -94,24 +110,21 @@ bot.onText(/\/a4pdf/, async (msg) => {
 
   doc.end();
 
-
-  // WAIT until file is finished writing
   stream.on("finish", async () => {
     await bot.sendDocument(chatId, pdfName);
 
-    // cleanup
     userPhotos[chatId].forEach((file) => fs.unlinkSync(file));
     fs.unlinkSync(pdfName);
     userPhotos[chatId] = [];
   });
 });
 
+// ================= NORMAL PDF =================
 bot.onText(/\/pdf/, async (msg) => {
   const chatId = msg.chat.id;
 
   if (!userPhotos[chatId] || userPhotos[chatId].length === 0) {
-    bot.sendMessage(chatId, "No photos added.");
-    return;
+    return bot.sendMessage(chatId, "No photos added.");
   }
 
   bot.sendMessage(chatId, "Creating Normal PDF...");
@@ -123,10 +136,8 @@ bot.onText(/\/pdf/, async (msg) => {
   doc.pipe(stream);
 
   for (const img of userPhotos[chatId]) {
-    // get image size
     const image = doc.openImage(img);
 
-    // create page same size as image
     doc.addPage({
       size: [image.width, image.height],
       margin: 0,
@@ -140,13 +151,11 @@ bot.onText(/\/pdf/, async (msg) => {
   stream.on("finish", async () => {
     await bot.sendDocument(chatId, pdfName);
 
-    // cleanup
     userPhotos[chatId].forEach((file) => fs.unlinkSync(file));
     fs.unlinkSync(pdfName);
     userPhotos[chatId] = [];
   });
 });
-
 
 // /start command
 bot.onText(/\/start/, (msg) => {
